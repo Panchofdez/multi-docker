@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t panchofdez/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run panchofdez/react-test npm test -- --coverage
+
+after_success:
+  #build images
+  - docker build -t panchofdez/multi-client ./client
+  - docker build -t panchofdez/multi-nginx ./nginx
+  - docker build -t panchofdez/multi-server ./server
+  - docker build -t panchofdez/multi-worker ./worker
+  #login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #take images and push to dockerhub
+  - docker push panchofdez/multi-client
+  - docker push panchofdez/multi-nginx
+  - docker push panchofdez/multi-server
+  - docker push panchofdez/multi-worker
